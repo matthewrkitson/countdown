@@ -33,7 +33,16 @@
 				var seconds = Math.floor(secondsRemaining);
 				var text = days + " days, " + hours + " hours, " + minutes + " minutes, " + seconds + " seconds";
 
-				var textElement = document.getElementById("countdown");
+				setText("countdown", text);
+				setText("days", days);
+				setText("hours", hours);
+				setText("minutes", minutes);
+				setText("seconds", seconds);
+			}
+			
+			function setText(elementId, text)
+			{
+				var textElement = document.getElementById(elementId);
 				textElement.innerHTML = text;
 			}
 		</script>
@@ -41,5 +50,19 @@
 
 	<body onload="startCountdown();">
 	<p class="countdown" id="countdown">00:00:00</p>
+	<table>
+		<tr class="values">
+			<td id="days">0</td>
+			<td id="hours">0</td>
+			<td id="minutes">0</td>
+			<td id="seconds">0</td>
+		</tr>
+		<tr class="descriptions">
+			<td>days</td>
+			<td>hours</td>
+			<td>minutes</td>
+			<td>seconds</td>
+		</tr>
+	</table>
 	</body>
 </html>
