@@ -1,6 +1,54 @@
 <html>
 	<head>
 		<style>
+		.main {
+			background-color: black;
+			font-family: sans-serif;
+		}
+		
+		div.target {
+			width: 100%;
+			color: green;
+			text-align: center;
+			vertical-align: middle; 
+			padding: 2%;
+		}
+		
+		table.display { 
+			width: 100%;
+			/* border: thin white solid; */
+			text-align: center;
+			vertical-align: middle; 
+			table-layout: fixed; 
+			padding: 5%;
+		}
+		
+		p.target {
+			font-size: 3vw;
+			text-align: center;
+			vertical-align: middle; 
+		}
+		
+		.values {
+			color: red;
+			font-size: 10vw;
+			padding: 10%
+		}
+		
+		.descriptions {
+			color: green;
+			font-size: 2vw;
+			vertical-align: top;
+		}
+		
+		#days { width: 30%; }
+		#hours { width: 20%; }
+		#minutes { width: 20%; }
+		#seconds { width: 20%; }
+		
+		td {
+			/* border: thin white solid; */
+		}
 		</style>
 		<script>
 			const SECONDS_IN_DAY = 60 * 60 * 24;
@@ -17,6 +65,8 @@
 				// Replace this with your countdown target.
 				// (currently new year's day 2019)
 				var target = new Date(2019, 00, 01, 00, 00, 00);
+				var targetDateText = target.toDateString();
+				var targetTimeText = target.toTimeString();
 				
 				var now = Date.now();
 				var secondsRemaining = (target - now) / 1000;
@@ -31,9 +81,9 @@
 				var secondsRemaining = secondsRemaining - minutes * SECONDS_IN_MINUTE;
 				
 				var seconds = Math.floor(secondsRemaining);
-				var text = days + " days, " + hours + " hours, " + minutes + " minutes, " + seconds + " seconds";
-
-				setText("countdown", text);
+				
+				setText("targetdate", targetDateText);
+				setText("targettime", targetTimeText);
 				setText("days", days);
 				setText("hours", hours);
 				setText("minutes", minutes);
@@ -48,21 +98,33 @@
 		</script>
 	</head>
 
-	<body onload="startCountdown();">
-	<p class="countdown" id="countdown">00:00:00</p>
-	<table>
-		<tr class="values">
-			<td id="days">0</td>
-			<td id="hours">0</td>
-			<td id="minutes">0</td>
-			<td id="seconds">0</td>
-		</tr>
-		<tr class="descriptions">
-			<td>days</td>
-			<td>hours</td>
-			<td>minutes</td>
-			<td>seconds</td>
-		</tr>
-	</table>
+	<body class="main" onload="startCountdown();">
+
+		<div class="target">
+			<p class="target" id="targetdate">target date</p>
+			<p class="target" id="targettime">target time</p>
+		</div>
+		<table class="display">
+			<tr class="values">
+				<td/>
+				<td id="days">0</td>
+				<td id="hours">0</td>
+				<td>:</td>
+				<td id="minutes">0</td>
+				<td>:</td>
+				<td id="seconds">0</td>
+				<td/>
+			</tr>
+			<tr class="descriptions">
+				<td/>
+				<td>Days</td>
+				<td>Hours</td>
+				<td/>
+				<td>Minutes</td>
+				<td/>
+				<td>Seconds</td>
+				<td/>
+			</tr>
+		</table>
 	</body>
 </html>
