@@ -1,130 +1,162 @@
 <html>
-	<head>
-		<style>
-		.main {
-			background-color: black;
-			font-family: sans-serif;
-		}
-		
-		div.target {
-			width: 100%;
-			color: green;
-			text-align: center;
-			vertical-align: middle; 
-			padding: 2%;
-		}
-		
-		table.display { 
-			width: 100%;
-			/* border: thin white solid; */
-			text-align: center;
-			vertical-align: middle; 
-			table-layout: fixed; 
-			padding: 5%;
-		}
-		
-		p.target {
-			font-size: 3vw;
-			text-align: center;
-			vertical-align: middle; 
-		}
-		
-		.values {
-			color: red;
-			font-size: 10vw;
-			padding: 10%
-		}
-		
-		.descriptions {
-			color: green;
-			font-size: 2vw;
-			vertical-align: top;
-		}
-		
-		#days { width: 30%; }
-		#hours { width: 20%; }
-		#minutes { width: 20%; }
-		#seconds { width: 20%; }
-		
-		td {
-			/* border: thin white solid; */
-		}
-		</style>
-		<script>
-			const SECONDS_IN_DAY = 60 * 60 * 24;
-			const SECONDS_IN_HOUR = 60 * 60;
-			const SECONDS_IN_MINUTE = 60;
-		
-			function startCountdown()
-			{
-				window.setInterval(updateCountdown, 1000);
-			}
-			
-			function updateCountdown()
-			{
-				// Replace this with your countdown target.
-				// (currently new year's day 2019)
-				var target = new Date(2019, 00, 01, 00, 00, 00);
-				var targetDateText = target.toDateString();
-				var targetTimeText = target.toTimeString();
-				
-				var now = Date.now();
-				var secondsRemaining = (target - now) / 1000;
-				
-				var days = Math.floor(secondsRemaining / SECONDS_IN_DAY);
-				secondsRemaining = secondsRemaining - days * SECONDS_IN_DAY;
-				
-				var hours = Math.floor(secondsRemaining / SECONDS_IN_HOUR);
-				secondsRemaining = secondsRemaining - hours * SECONDS_IN_HOUR;
-				
-				var minutes = Math.floor(secondsRemaining / SECONDS_IN_MINUTE);
-				var secondsRemaining = secondsRemaining - minutes * SECONDS_IN_MINUTE;
-				
-				var seconds = Math.floor(secondsRemaining);
-				
-				setText("targetdate", targetDateText);
-				setText("targettime", targetTimeText);
-				setText("days", days);
-				setText("hours", hours);
-				setText("minutes", minutes);
-				setText("seconds", seconds);
-			}
-			
-			function setText(elementId, text)
-			{
-				var textElement = document.getElementById(elementId);
-				textElement.innerHTML = text;
-			}
-		</script>
-	</head>
+  <head>
+    <style>
+    .main {
+      background-color: navajowhite;
+      font-family: cursive;
+    }
+    
+    div.target {
+      width: 100%;
+      color: green;
+      text-align: center;
+      vertical-align: middle; 
+      padding: 2%;
+    }
+    
+    table.display { 
+      width: 100%;
+      /* border: thin white solid; */
+      text-align: center;
+      vertical-align: middle; 
+      table-layout: fixed; 
+      padding: 5%;
+    }
+    
+    p.target {
+      font-size: 3vw;
+      text-align: center;
+      vertical-align: middle; 
+    }
+    
+    .values {
+      color: red;
+      font-size: 10vw;
+      padding: 10%
+    }
+    
+    .descriptions {
+      color: green;
+      font-size: 2vw;
+      vertical-align: top;
+    }
+    
+    td {
+      /* border: thin white solid; */
+    }
+    </style>
+    <script>
+      function start() {
+        "use strict";
 
-	<body class="main" onload="startCountdown();">
+        var target = new Date(2018, 10, 30, 17, 0, 0);
+        document.getElementById("targetdate").innerText = target.toDateString();
+        document.getElementById("targettime").innerText = target.toTimeString();
 
-		<div class="target">
-			<p class="target" id="targetdate">target date</p>
-			<p class="target" id="targettime">target time</p>
-		</div>
-		<table class="display">
-			<tr class="values">
-				<td/>
-				<td id="days">0</td>
-				<td id="hours">0</td>
-				<td>:</td>
-				<td id="minutes">0</td>
-				<td>:</td>
-				<td id="seconds">0</td>
-				<td/>
-			</tr>
-			<tr class="descriptions">
-				<td/>
-				<td>Days</td>
-				<td>Hours</td>
-				<td/>
-				<td>Minutes</td>
-				<td/>
-				<td>Seconds</td>
-				<td/>
-			</tr>
-		</table>
-	</body>
+        var c = document.getElementById("clock");
+        var a = c.getContext("2d");
+
+        // Creates a ten element array for digits "zero" to "nine" and "colon"
+        var points =
+          "akaeeakaqaueukuqqukueuaqak0eegekckakekdkhklkjknkrkqku0aeaaiakamauaueukakatctstut0cecaiakavavikixixukucuaqao0mumsmcmakcckamcmimkmmmsmum0ubsbcbabadagaiyayukucuaqao0sesamaka_aamaoaguguouwawao0abcbibkbmbsbubsdohmjinisiu0kavaviki^i^ukuxuxiki`i`aka0uguoaoaga_u_uguiwukuiucucq0kgko"
+            .split(0).map(function(x) {
+              // Each array is either 26 control points (x,y) for four Bezier curves or 4 points for the dots in the "colon"
+              return [].map.call(x,
+                function(x, i) {
+                  // Even elements are x-ordinates, odd elements are y-ordinates
+                  // We must be careful not to allow the x-ordinate to be zero (simplifies later "if" condition)
+                  return x.charCodeAt(0) * [6, 10][i & 1] - [641, 1200][i & 1];
+                });
+            });
+        // Called every 100th second at most
+        setInterval(function() {
+            function sinusoid(value) {
+              // This function is inlined by the Google Closure compiler
+              return Math.sin(now * (value % 1.7)) / 31;
+            }
+
+            // Clear our canvas by setting the size
+            var w = c.parentElement.clientWidth;
+            var h = w / 5;
+            var s = w / 12;
+            c.width = w;
+            c.height = h;
+            a.lineCap = a.lineJoin = "round";
+            // Work out the local time in half-second units
+            var now = new Date;
+            now = now.getTime() / 500 - now.getTimezoneOffset() * 120;
+            now = target.getTime() / 500 - now;
+            // Digits lerp in the second half of each second
+            var lerp = Math.max(now % 2 - 1, 0);
+            // Work out the "?HH:MM:SS" digits arrays for now and in half a second's time
+            var xy = [now, now + 1].map(function(x) {
+              // The first element will be ignored, but shaves off the higher components
+              return [17280000, 1728000, 172800, 0, 72000, 7200, 0, 1200, 120, 0, 20, 2].map(function(y) {
+                return y ? [~~(x / y), x %= y][0] : 10;
+              });
+            });
+            a.scale(s, s);
+            a.translate(12, 2);
+            for (var digit = 12; --digit;) {
+              // Work back through the digits
+              var xx = xy[0][digit];
+              var yy = xy[1][digit];
+              a.translate(-1, 0);
+              if ((xx < 10) || lerp) {
+                // If this is not an invisible colon...
+                var transformed = points[xx].map(function(x, i) {
+                  // Lerp all the control points for the current digit
+                  return x + (points[yy][i] - x) * lerp;
+                });
+                // Adjust the canvas transformation to achieve nice wobbliness
+                a.save();
+                a.scale(sinusoid(digit + 9) / 50 + 0.0066, sinusoid(22 - digit) / 100 + 0.0066);
+                a.rotate(sinusoid(digit));
+                // Draw the digits twice: with black outline and coloured insides
+                [60, 32].map(function(x) {
+                  a.lineWidth = x;
+                  a.beginPath();
+                  a.moveTo(transformed[0], transformed[1]);
+                  if (transformed[4]) {
+                    // Four joined Bezier curves
+                    for (var i = 2; i < 26; i += 6) {
+                      a.bezierCurveTo.apply(a, transformed.slice(i, i + 6));
+                    }
+                  } else {
+                    // Two dots (actually short lines)
+                    a.lineTo(transformed[0], transformed[1] + 1);
+                    a.moveTo(transformed[2], transformed[3] + 1);
+                    a.lineTo(transformed[2], transformed[3]);
+                  }
+                  a.stroke();
+                  // The inside colour is lerped in HSL space, but handle "23:59:59" to "00:00:00" et al gracefully
+                  a.strokeStyle = "hsl(" + (((xx + ((yy - xx + 10) % 10) * lerp) * 36) % 360) + ",80%,80%)";
+                });
+                a.restore();
+              }
+            }
+          },
+          10);
+      }
+    </script>
+  </head>
+
+  <body class="main" onload="start();">
+
+  <div class="target">
+    <p class="target" id="targetdate">target date</p>
+    <p class="target" id="targettime">target time</p>
+  </div>
+  <table class="display">
+    <tr class="values">
+      <td colspan="4"><canvas id="clock"></canvas></td>
+    </tr>
+    <tr class="descriptions">
+      <td>Days</td>
+      <td>Hours</td>
+      <td>Minutes</td>
+      <td>Seconds</td>
+    </tr>
+  </table>
+  </body>
 </html>
