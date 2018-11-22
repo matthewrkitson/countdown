@@ -1,0 +1,32 @@
+Potential 7 segment displays
+
+38.1mm (1.5INCH) SINGLE DIGIT NUMERIC DISPLAY
+https://docs-emea.rs-online.com/webdocs/1384/0900766b81384fbc.pdf
+Part Number: SA15-11SRWA 
+£3.65 (inc. VAT)
+
+25.4mm (1.0 INCH) SINGLE DIGIT NUMERIC DISPLAY
+https://docs-emea.rs-online.com/webdocs/0ef5/0900766b80ef50e8.pdf
+Part Number: SA10-21SURKWA
+£2.23 (inc. VAT)
+
+
+20.32mm (0.8INCH) SINGLE DIGIT NUMERIC DISPLAY
+https://docs-emea.rs-online.com/webdocs/13dd/0900766b813dd204.pdf
+Part Number: SA08-12SURKWA
+£1.65 (inc. VAT)
+Fritzing OK. 20mm
+
+LED driver IC
+TLC5916
+http://www.ti.com/lit/ds/symlink/tlc5917.pdf
+SOIC - SO-16
+£1.16 (inc. VAT)
+
+
+
+Tasks
+Check prices on Rapid vs RS
+PCB for various sized displays
+Connector footprints
+
