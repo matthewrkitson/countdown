@@ -10,6 +10,23 @@ https://docs-emea.rs-online.com/webdocs/0ef5/0900766b80ef50e8.pdf
 Part Number: SA10-21SURKWA
 £2.23 (inc. VAT)
 
+** Use this one
+** 
+** Kingbright SA10-11SRWA 1" Super Bright Red LED Display Anode
+** 26mm (1.02 INCH) SINGLE DIGIT NUMERIC DISPLAY
+** £0.83 (inc VAT) at Rapid
+** Far cheaper, but pinout is slightly less convenient. 
+Pin locations
+1  a      CA 14
+2  f      b  13
+3  CA     -  12
+4  -      g  11
+5  -      c  10
+6  CA    CA   9
+7  e      d   8
+
+ 
+
 
 20.32mm (0.8INCH) SINGLE DIGIT NUMERIC DISPLAY
 https://docs-emea.rs-online.com/webdocs/13dd/0900766b813dd204.pdf
@@ -22,11 +39,24 @@ TLC5916
 http://www.ti.com/lit/ds/symlink/tlc5917.pdf
 SOIC - SO-16
 £1.16 (inc. VAT)
+Drives common anode 7-segment display
 
 
+Each display needs 
+ddd hh mm ss is 9 digits. 
+
+Absolute minimim witdh of:
+ 1" digit display is 20.2cm (26mm (1.02 INCH) SINGLE DIGIT NUMERIC DISPLAY SA10-11SRWA) Rapid
+ 1" digit display is 21.6cm (25.4mm (1.0 INCH) SINGLE DIGIT NUMERIC DISPLAY SA10-21SURKWA) RS
+-- This feels about right. Allows a little space for gaps and a border round the RUB lid. 
+
+
+ 1.5" digit display is 29.7cm (38mm (1.5 INCH) SINGLE DIGIT NUMERIC DISPLAYS)
+-- Too big for a RUB box -- 
 
 Tasks
 Check prices on Rapid vs RS
+ - Rapid are far cheaper
 PCB for various sized displays
 Connector footprints
 
