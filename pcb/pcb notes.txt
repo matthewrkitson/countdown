@@ -70,3 +70,28 @@ Check prices on Rapid vs RS
 PCB for various sized displays
 Connector footprints
 
+Total number of 90° pins: 9 x 2 x 4 = 72
+
+
+PARTS LIST
+Rapid Electronics
+57-0214   9 x Kingbright SA10-11SRWA 1" Super Bright Red LED Display Anode
+19-0092  18 x TruConnect 4 Way Single Row Right Angled PCB Socket 2.54mm Pi
+22-0795   5 x TruConnect 36 Way R/a Single Row Plug
+50-8030   5 x BKL 10120185 1 x 36 Pin Header 2.54mm Pitch 3A Gold Plated
+1 x Diode
+1 x Resistor
+1 x TLC5916
+Stripboard
+Soldering iron tip
+M2.5 Nuts, bolts and washers
+Really useful box
+Small LEDs, mounts
+(medium and large too?)
+Button
+Buzzer for countdown
+Buzzer for device detector
+Connecting cables?
+Breadboard?
+2-3 x ULN2803
+Tilt switch
