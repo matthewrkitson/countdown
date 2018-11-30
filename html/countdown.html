@@ -85,7 +85,7 @@
             // Work out the local time in half-second units
             var now = new Date;
             now = now.getTime() / 500 - now.getTimezoneOffset() * 120;
-            now = target.getTime() / 500 - now;
+            now = Math.abs(target.getTime() / 500 - now);
             // Digits lerp in the second half of each second
             var lerp = Math.max(now % 2 - 1, 0);
             // Work out the "?HH:MM:SS" digits arrays for now and in half a second's time
