@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import time
+import itertools
 
 from gpiozero import LED
 
@@ -40,11 +41,29 @@ t_CLK = 1 * us
 t_LE  = 1 * us
 
 def initialise():
+    # I happen to have the following coloured wires attached
+    # to my PCB, and wire them to the Pi in the following order
+    #
+    # Orange   Vdd   3.3V
+    # Yellow    NC      -
+    # Green   Vled     5V
+    # Blue     GND    GND
+    # 
+    # Purple   CLK   GPIO 14
+    # Grey     SDI   GPIO 15
+    # White     LE   GPIO 18
+    # Black     OE   GPIO 23
+    # 
+
     controls = {}
     controls["CLK"] = LED(14)
     controls["SDI"] = LED(15)
     controls["LE"]  = LED(18)
     controls["OE"]  = LED(23)
+
+    # OE is active low, so turn on to disable all lights to start with. 
+    controls["OE"].on()
+    
     return controls
 
 def sleep(duration):
@@ -75,13 +94,15 @@ def digit_to_bits(digit):
     return bits
 
 def pulse(control, duration):
-    control.on()
+    logger.debug("Pulse " + control)
+    controls[control].on()
     time.sleep(duration)
-    control.off()
+    controls[control].off()
 
 def send_bit(bit, controls):
+    logger.debug("SDI = " + str(bit))
     controls["SDI"].value = bit
-    pulse(controls["CLK"], t_CLK)
+    pulse("CLK", t_CLK)
 
 def send_serial(bits, controls):
     # Send the bits in reverse order as the first one in gets
@@ -91,14 +112,12 @@ def send_serial(bits, controls):
         send_bit(bit, controls)
 
 def latch_display(controls):
-    pulse(controls["LE"], t_LE)
+    pulse("LE", t_LE)
 
-def update_display(text):
+def update_display(text, controls):
     # Starting with the last character, work out which
     # bits should be set, and send them through. Finally
     # latch the driver so that the display updates. 
-
-    controls = initialise()
 
     logger.debug("Updating display: '" + text + "'")
     bits = []
@@ -109,6 +128,11 @@ def update_display(text):
     latch_display(controls)
 
 
+controls = initialise()
+sequence = itertools.cycle(range(100))
+controls["OE"].off() # Active low.
+for x in sequence:
+    update_display("{:0>2d}".format(x), controls)
+    time.sleep(0.5)
 
-update_display("12x45")
 
