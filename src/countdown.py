@@ -37,8 +37,8 @@ ms = 1/1000
 us = ms / 1000
 ns = us / 1000
 
-t_CLK = 1 * us
-t_LE  = 1 * us
+t_CLK = 1 * ms
+t_LE  = 1 * ms
 
 def initialise():
     # I happen to have the following coloured wires attached
@@ -95,9 +95,11 @@ def digit_to_bits(digit):
 
 def pulse(control, duration):
     logger.debug("Pulse " + control)
+    sleep(duration / 2)
     controls[control].on()
-    time.sleep(duration)
+    sleep(duration)
     controls[control].off()
+    sleep(duration / 2)
 
 def send_bit(bit, controls):
     logger.debug("SDI = " + str(bit))
@@ -113,6 +115,7 @@ def send_serial(bits, controls):
 
 def latch_display(controls):
     pulse("LE", t_LE)
+    # pass
 
 def update_display(text, controls):
     # Starting with the last character, work out which
@@ -127,12 +130,48 @@ def update_display(text, controls):
         
     latch_display(controls)
 
+def switch_mode(mode, controls):
+    controls["LE"].off()
+    controls["OE"].on()
+    pulse("CLK", t_CLK)
+    controls["OE"].off()
+    pulse("CLK", t_CLK)
+    controls["OE"].on()
+    pulse("CLK", t_CLK)
+    if mode == "special":
+        controls["LE"].on()
+    else:
+        controls["LE"].off()
+    pulse("CLK", t_CLK)
+    controls["LE"].off()
+    pulse("CLK", t_CLK)
+
+def set_brightness(configuration_code, controls):
+    switch_mode("special", controls)
+    # Set the current
+    # configuration_code = [0, 1, 1, 1, 1, 1, 1, 1]
+    send_serial(configuration_code, controls)
+    send_serial(configuration_code, controls)
+    send_serial(configuration_code, controls)
+    send_serial(configuration_code, controls)
+    send_serial(configuration_code, controls)
+    send_serial(configuration_code, controls)
+    send_serial(configuration_code, controls)
+    send_serial(configuration_code, controls)
+    send_serial(configuration_code, controls)
+    latch_display(controls)
+    switch_mode("normal", controls)
 
 controls = initialise()
-sequence = itertools.cycle(range(100))
+set_brightness([0, 0, 0, 0, 0, 0, 0, 0], controls)
+update_display("888.88.88.88", controls)
 controls["OE"].off() # Active low.
+
+sequence = itertools.cycle(range(10))
 for x in sequence:
-    update_display("{:0>2d}".format(x), controls)
+    # update_display("{0}".format(x), controls)
+    update_display("222.22.22.22", controls)
+    # update_display("{0}{0}{0}.{0}{0}.{0}{0}.{0}{0}".format(x), controls)
     time.sleep(0.5)
 
 
