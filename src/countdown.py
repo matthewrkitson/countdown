@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 
 import time
+import datetime
 import itertools
-
-from gpiozero import LED
+import logging
+import gpiozero
+import threading
 
 from log import logger
 
@@ -30,15 +32,16 @@ segments = {
     "7": "fabc",
     "8": "abcdefg",
     "9": "gfabcd",
-    "-": "g"
+    "-": "g",
+    " ": ""
     }
 
 ms = 1/1000
 us = ms / 1000
 ns = us / 1000
 
-t_CLK = 1 * ms
-t_LE  = 1 * ms
+t_CLK = 10 * ms
+t_LE  = 10 * ms
 
 def initialise():
     # I happen to have the following coloured wires attached
@@ -56,10 +59,11 @@ def initialise():
     # 
 
     controls = {}
-    controls["CLK"] = LED(14)
-    controls["SDI"] = LED(15)
-    controls["LE"]  = LED(18)
-    controls["OE"]  = LED(23)
+    controls["lock"] = threading.Lock()
+    controls["CLK"] = gpiozero.LED(14)
+    controls["SDI"] = gpiozero.LED(15)
+    controls["LE"]  = gpiozero.LED(18)
+    controls["OE"]  = gpiozero.LED(23)
 
     # OE is active low, so turn on to disable all lights to start with. 
     controls["OE"].on()
@@ -69,7 +73,8 @@ def initialise():
 def sleep(duration):
     # May want to change this to be a busy wait.
     # time.sleep() is not very precice. 
-    time.sleep(duration)
+    # time.sleep(duration)
+    pass
 
 def digit_to_bits(digit):
     logger.debug("Converting '" + digit + "' to bits.")
@@ -122,15 +127,17 @@ def update_display(text, controls):
     # bits should be set, and send them through. Finally
     # latch the driver so that the display updates. 
 
-    logger.debug("Updating display: '" + text + "'")
-    bits = []
-    reversed_text = text[::-1]
-    for char in reversed_text:
-        send_serial(digit_to_bits(char), controls)
+    with controls["lock"]:
+        logger.debug("Updating display: '" + text + "'")
+        bits = []
+        reversed_text = text[::-1]
+        for char in reversed_text:
+            send_serial(digit_to_bits(char), controls)
         
-    latch_display(controls)
+        latch_display(controls)
 
 def switch_mode(mode, controls):
+    old_oe = controls["OE"].value
     controls["LE"].off()
     controls["OE"].on()
     pulse("CLK", t_CLK)
@@ -145,33 +152,80 @@ def switch_mode(mode, controls):
     pulse("CLK", t_CLK)
     controls["LE"].off()
     pulse("CLK", t_CLK)
+    controls["OE"].value = old_oe
 
 def set_brightness(configuration_code, controls):
-    switch_mode("special", controls)
-    # Set the current
-    # configuration_code = [0, 1, 1, 1, 1, 1, 1, 1]
-    send_serial(configuration_code, controls)
-    send_serial(configuration_code, controls)
-    send_serial(configuration_code, controls)
-    send_serial(configuration_code, controls)
-    send_serial(configuration_code, controls)
-    send_serial(configuration_code, controls)
-    send_serial(configuration_code, controls)
-    send_serial(configuration_code, controls)
-    send_serial(configuration_code, controls)
-    latch_display(controls)
-    switch_mode("normal", controls)
+    with controls["lock"]:
+        old_oe = controls["OE"].value
+        switch_mode("special", controls)
+        controls["OE"].on()
+        send_serial(configuration_code, controls)
+        send_serial(configuration_code, controls)
+        send_serial(configuration_code, controls)
+        send_serial(configuration_code, controls)
+        send_serial(configuration_code, controls)
+        send_serial(configuration_code, controls)
+        send_serial(configuration_code, controls)
+        send_serial(configuration_code, controls)
+        send_serial(configuration_code, controls)
+        latch_display(controls)
+        controls["OE"].value = old_oe
+        switch_mode("normal", controls)
 
+def enable_display(controls):
+    with controls["lock"]:
+        controls["OE"].off()
+
+def disable_display(controls):
+    with controls["lock"]:
+        controls["OE"].on()
+
+def time_delta(now, then):
+    delta = then - now
+    days = delta.days
+    hours, minsec = divmod(delta.seconds, 3600)
+    mins, secs = divmod(minsec, 60)
+    return days, hours, mins, secs
+
+def toggle_motivational_mode(controls, state):
+    mode = state["motivation_mode"]
+    if mode == "normal":
+        state["motivation_mode"] = "motivational"
+        code = [1, 1, 1, 1, 1, 1, 1, 1]
+        set_brightness(code, controls)
+    elif mode == "motivational":
+        code = [1, 1, 1, 1, 1, 1, 1, 1]
+        set_brightness(code, controls)
+        # Set OE to blink...
+        state["motivation_mode"] = "extra motivational"
+    else:
+        code = [0, 0, 0, 0, 0, 0, 0, 0]
+        set_brightness(code, controls)
+        state["motivation_mode"] = "normal"
+
+    print("State is now " + state["motivation_mode"])
+
+logger.setLevel(logging.INFO)
 controls = initialise()
 set_brightness([0, 0, 0, 0, 0, 0, 0, 0], controls)
-update_display("888.88.88.88", controls)
-controls["OE"].off() # Active low.
+enable_display(controls)
 
-sequence = itertools.cycle(range(10))
-for x in sequence:
-    # update_display("{0}".format(x), controls)
-    update_display("222.22.22.22", controls)
-    # update_display("{0}{0}{0}.{0}{0}.{0}{0}.{0}{0}".format(x), controls)
-    time.sleep(0.5)
+state = { "motivation_mode": "normal" }
 
+button1 = gpiozero.Button(2)
+buzzer = gpiozero.LED(24)
+button1.when_pressed = buzzer.on
+button1.when_released = buzzer.off
 
+button2 = gpiozero.Button(3)
+button2.when_pressed = lambda: toggle_motivational_mode(controls, state)
+
+target = datetime.datetime(2019, 3, 1, 13, 0, 0)
+
+while True:
+    now = datetime.datetime.now()
+    d, h, m, s = time_delta(now, target)
+    display = "{0:03}.{1:02}.{2:02}.{3:02}".format(d, h, m, s)
+    logger.info(display)
+    update_display(display, controls)
+    time.sleep(0.1)
