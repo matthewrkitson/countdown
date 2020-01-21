@@ -185,7 +185,7 @@ def time_delta(now, then):
     days = delta.days
     hours, minsec = divmod(delta.seconds, 3600)
     mins, secs = divmod(minsec, 60)
-    return days, hours, mins, secs
+    return days, hours, mins, secs, delta.microseconds
 
 def toggle_motivational_mode(controls, state):
     mode = state["motivation_mode"]
@@ -193,14 +193,15 @@ def toggle_motivational_mode(controls, state):
         state["motivation_mode"] = "motivational"
         code = [1, 1, 1, 1, 1, 1, 1, 1]
         set_brightness(code, controls)
+        enable_display(controls)
     elif mode == "motivational":
         code = [1, 1, 1, 1, 1, 1, 1, 1]
         set_brightness(code, controls)
-        # Set OE to blink...
         state["motivation_mode"] = "extra motivational"
     else:
         code = [0, 0, 0, 0, 0, 0, 0, 0]
         set_brightness(code, controls)
+        enable_display(controls)
         state["motivation_mode"] = "normal"
 
     print("State is now " + state["motivation_mode"])
@@ -220,12 +221,23 @@ button1.when_released = buzzer.off
 button2 = gpiozero.Button(3)
 button2.when_pressed = lambda: toggle_motivational_mode(controls, state)
 
-target = datetime.datetime(2019, 3, 1, 13, 0, 0)
+target = datetime.datetime(2019, 3, 29, 17, 0, 0)
 
+current_display = ""
 while True:
     now = datetime.datetime.now()
-    d, h, m, s = time_delta(now, target)
-    display = "{0:03}.{1:02}.{2:02}.{3:02}".format(d, h, m, s)
-    logger.info(display)
-    update_display(display, controls)
-    time.sleep(0.1)
+    d, h, m, s, us = time_delta(now, target)
+    if d < 0:
+        new_display = "000.00.00.00"
+    else:
+        new_display = "{0:03}.{1:02}.{2:02}.{3:02}".format(d, h, m, s)
+    if new_display != current_display:
+        # logger.info(display)
+        update_display(new_display, controls)
+        current_display = new_display
+    if (state["motivation_mode"] == "extra motivational") or (d < 0):
+        if us <= 250e3 or (us > 500e3 and us <= 750e3):
+            enable_display(controls)
+        else:
+            disable_display(controls)
+    time.sleep(0.01)
