@@ -206,6 +206,13 @@ def toggle_motivational_mode(controls, state):
 
     print("State is now " + state["motivation_mode"])
 
+def set_target(state):
+    now = datetime.datetime.now()
+    delta = datetime.timedelta(minutes = 6)
+    target = now + delta
+    state["target"] = target
+    state["running"] = False
+
 logger.setLevel(logging.INFO)
 controls = initialise()
 set_brightness([0, 0, 0, 0, 0, 0, 0, 0], controls)
@@ -214,23 +221,32 @@ enable_display(controls)
 state = { "motivation_mode": "normal" }
 
 button1 = gpiozero.Button(2)
+button2 = gpiozero.Button(3)
+button3 = gpiozero.Button(4)
+button4 = gpiozero.Button(17)
+button5 = gpiozero.Button(27)
+
 buzzer = gpiozero.LED(24)
 button1.when_pressed = buzzer.on
 button1.when_released = buzzer.off
 
-button2 = gpiozero.Button(3)
 button2.when_pressed = lambda: toggle_motivational_mode(controls, state)
 
-target = datetime.datetime(2019, 3, 29, 17, 0, 0)
+button3.when_pressed = lambda: set_target(state)
+
+# target = datetime.datetime(2019, 3, 29, 17, 0, 0)
+set_target(state)
 
 current_display = ""
 while True:
     now = datetime.datetime.now()
+    target = state["target"]
     d, h, m, s, us = time_delta(now, target)
+    ds = int(us / 10000)
     if d < 0:
         new_display = "000.00.00.00"
     else:
-        new_display = "{0:03}.{1:02}.{2:02}.{3:02}".format(d, h, m, s)
+        new_display = "{0:03}.{1:02}.{2:02}.{3:02}".format(h, m, s, ds)
     if new_display != current_display:
         # logger.info(display)
         update_display(new_display, controls)
@@ -240,4 +256,4 @@ while True:
             enable_display(controls)
         else:
             disable_display(controls)
-    time.sleep(0.01)
+    # time.sleep(0.001)
