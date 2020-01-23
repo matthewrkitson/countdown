@@ -195,10 +195,10 @@ def toggle_motivational_mode(controls, state):
         set_brightness(code, controls)
         enable_display(controls)
     elif mode == "motivational":
-        code = [1, 1, 1, 1, 1, 1, 1, 1]
-        set_brightness(code, controls)
-        state["motivation_mode"] = "extra motivational"
-    else:
+#        code = [1, 1, 1, 1, 1, 1, 1, 1]
+#        set_brightness(code, controls)
+#        state["motivation_mode"] = "extra motivational"
+#    else:
         code = [0, 0, 0, 0, 0, 0, 0, 0]
         set_brightness(code, controls)
         enable_display(controls)
@@ -206,19 +206,31 @@ def toggle_motivational_mode(controls, state):
 
     print("State is now " + state["motivation_mode"])
 
-def set_target(state):
+def set_target(state, controls, buzzer):
     now = datetime.datetime.now()
-    delta = datetime.timedelta(minutes = 6)
+    delta = datetime.timedelta(seconds = 6)
     target = now + delta
     state["target"] = target
+    state["last_update"] = now
     state["running"] = False
+    buzzer.off()
+    enable_display(controls)
+
+def toggle_running(state, controls, buzzer):
+    state["running"] = not state["running"]
+    if not state["running"]:
+        buzzer.off()
+        enable_display(controls)
 
 logger.setLevel(logging.INFO)
 controls = initialise()
 set_brightness([0, 0, 0, 0, 0, 0, 0, 0], controls)
 enable_display(controls)
 
-state = { "motivation_mode": "normal" }
+state = { 
+            "motivation_mode": "normal",
+            "running": False,
+        }
 
 button1 = gpiozero.Button(2)
 button2 = gpiozero.Button(3)
@@ -232,14 +244,21 @@ button1.when_released = buzzer.off
 
 button2.when_pressed = lambda: toggle_motivational_mode(controls, state)
 
-button3.when_pressed = lambda: set_target(state)
+button3.when_pressed = lambda: set_target(state, controls, buzzer)
+
+button4.when_pressed = lambda: toggle_running(state, controls, buzzer)
 
 # target = datetime.datetime(2019, 3, 29, 17, 0, 0)
-set_target(state)
+set_target(state, controls, buzzer)
 
 current_display = ""
 while True:
     now = datetime.datetime.now()
+    last_update = state["last_update"]
+
+    if not state["running"]:
+        state["target"] = state["target"] + (now - last_update)
+        
     target = state["target"]
     d, h, m, s, us = time_delta(now, target)
     ds = int(us / 10000)
@@ -247,13 +266,21 @@ while True:
         new_display = "000.00.00.00"
     else:
         new_display = "{0:03}.{1:02}.{2:02}.{3:02}".format(h, m, s, ds)
+    
     if new_display != current_display:
         # logger.info(display)
         update_display(new_display, controls)
         current_display = new_display
-    if (state["motivation_mode"] == "extra motivational") or (d < 0):
+    
+    if state["running"] and ((state["motivation_mode"] == "extra motivational") or (d < 0)):
         if us <= 250e3 or (us > 500e3 and us <= 750e3):
             enable_display(controls)
+            buzzer.on()
         else:
             disable_display(controls)
-    # time.sleep(0.001)
+            buzzer.off()
+
+    state["last_update"] = now
+
+    if not state["running"]:
+        time.sleep(0.01)
