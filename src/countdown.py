@@ -1,14 +1,20 @@
 #!/usr/bin/python3
 
+import logging
+from log import logger
+logger.setLevel(logging.INFO)
+logger.info("")
+logger.info("")
+logger.info("Countdown controller started")
+
+logger.info("Importing python modules")
 import time
 import datetime
 import itertools
-import logging
 import gpiozero
 import threading
 import subprocess
 
-from log import logger
 
 #              a     
 #           -------  
@@ -62,6 +68,7 @@ def initialise():
     # Black     OE   GPIO 23
     # 
 
+    logger.info("Initialising LED controller")
     controls = {}
     controls["lock"] = threading.Lock()
     controls["CLK"] = gpiozero.LED(14)
@@ -124,7 +131,6 @@ def send_serial(bits, controls):
 
 def latch_display(controls):
     pulse("LE", t_LE)
-    # pass
 
 def update_display(text, controls):
     # Starting with the last character, work out which
@@ -184,12 +190,13 @@ def disable_display(controls):
     with controls["lock"]:
         controls["OE"].on()
 
-def time_delta(now, then):
-    delta = then - now
+def time_delta(now, then, countdown):
+    signed_delta = then - now if countdown else now - then
+    delta = abs(signed_delta)
     days = delta.days
     hours, minsec = divmod(delta.seconds, 3600)
     mins, secs = divmod(minsec, 60)
-    return days, hours, mins, secs, delta.microseconds
+    return days, hours, mins, secs, delta.microseconds, signed_delta.total_seconds()
 
 def toggle_motivational_mode(controls, state):
     mode = state["motivation_mode"]
@@ -211,31 +218,45 @@ def toggle_motivational_mode(controls, state):
     print("State is now " + state["motivation_mode"])
 
 def set_target(state, controls, buzzer):
-    now = datetime.datetime.now()
-    delta = datetime.timedelta(minutes = 6)
-    target = now + delta
-    state["target"] = target
-    state["last_update"] = now
-    state["running"] = False
-    buzzer.off()
-    enable_display(controls)
-
-def toggle_running(state, controls, buzzer):
-    state["running"] = not state["running"]
-    if not state["running"]:
+    # Reset button only has any effect in fixed mode.
+    if state["mode"] == "fixed":
+        now = datetime.datetime.now()
+        delta = state["duration"]
+        target = now + delta
+        state["target"] = target
+        state["last_update"] = now
+        state["running"] = False
         buzzer.off()
         enable_display(controls)
 
-logger.setLevel(logging.INFO)
+def toggle_running(state, controls, buzzer):
+    # Start/stop button only has any effect in fixed mode.
+    if state["mode"] == "fixed":
+        state["running"] = not state["running"]
+        if not state["running"]:
+            buzzer.off()
+            enable_display(controls)
+
 controls = initialise()
 set_brightness([0, 0, 0, 0, 0, 0, 0, 0], controls)
 enable_display(controls)
 
+now = datetime.datetime.now()
+duration = datetime.timedelta(minutes = 6)
+countdown_target = datetime.datetime(2023, 10, 13, 17, 40, 0)
+mode = "targetted" # Can be "fixed" or "targetted"
+
 state = { 
             "motivation_mode": "normal",
-            "running": False,
+            "mode": mode,
+            "running": True if mode == "targetted" else False,
+            "countdown": True,    # True for countdown, false for countup
+            "duration": duration,
+            "target": countdown_target,
+            "last_update": now,
         }
 
+logger.info("Configuring GPIO")
 button1 = gpiozero.Button(2)
 button2 = gpiozero.Button(3)
 button3 = gpiozero.Button(4)
@@ -254,8 +275,11 @@ button4.when_pressed = lambda: toggle_running(state, controls, buzzer)
 
 button5.when_pressed = lambda: poweroff()
 
-# target = datetime.datetime(2019, 3, 29, 17, 0, 0)
 set_target(state, controls, buzzer)
+
+logger.info("Starting countdown loop")
+logger.info("--> Press Ctrl+C to stop")
+logger.info("")
 
 current_display = ""
 while True:
@@ -266,19 +290,17 @@ while True:
         state["target"] = state["target"] + (now - last_update)
         
     target = state["target"]
-    d, h, m, s, us = time_delta(now, target)
-    ds = int(us / 10000)
-    if d < 0:
-        new_display = "000.00.00.00"
+    d, h, m, s, us, dt = time_delta(now, target, state["countdown"])
+    if dt < 0:
+        new_display = "  0.00.00.00"
     else:
-        new_display = "{0:03}.{1:02}.{2:02}.{3:02}".format(h, m, s, ds)
+        new_display = "{0:>3}.{1:02}.{2:02}.{3:02}".format(d, h, m, s)
     
     if new_display != current_display:
-        # logger.info(display)
         update_display(new_display, controls)
         current_display = new_display
     
-    if state["running"] and ((state["motivation_mode"] == "extra motivational") or (d < 0)):
+    if state["running"] and ((state["motivation_mode"] == "extra motivational") or (dt < 0)):
         if us <= 250e3 or (us > 500e3 and us <= 750e3):
             enable_display(controls)
             buzzer.on()
