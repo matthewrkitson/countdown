@@ -6,6 +6,7 @@ import itertools
 import logging
 import gpiozero
 import threading
+import subprocess
 
 from log import logger
 
@@ -42,6 +43,9 @@ ns = us / 1000
 
 t_CLK = 10 * ms
 t_LE  = 10 * ms
+
+def poweroff():
+    subprocess.check_call(["sudo", "poweroff"])
 
 def initialise():
     # I happen to have the following coloured wires attached
@@ -208,7 +212,7 @@ def toggle_motivational_mode(controls, state):
 
 def set_target(state, controls, buzzer):
     now = datetime.datetime.now()
-    delta = datetime.timedelta(seconds = 6)
+    delta = datetime.timedelta(minutes = 6)
     target = now + delta
     state["target"] = target
     state["last_update"] = now
@@ -247,6 +251,8 @@ button2.when_pressed = lambda: toggle_motivational_mode(controls, state)
 button3.when_pressed = lambda: set_target(state, controls, buzzer)
 
 button4.when_pressed = lambda: toggle_running(state, controls, buzzer)
+
+button5.when_pressed = lambda: poweroff()
 
 # target = datetime.datetime(2019, 3, 29, 17, 0, 0)
 set_target(state, controls, buzzer)
