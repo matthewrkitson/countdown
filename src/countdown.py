@@ -243,7 +243,7 @@ enable_display(controls)
 
 now = datetime.datetime.now()
 duration = datetime.timedelta(minutes = 6)
-countdown_target = datetime.datetime(2023, 10, 13, 17, 40, 0)
+countdown_target = datetime.datetime(2023, 10, 13, 19, 0, 0)
 mode = "targetted" # Can be "fixed" or "targetted"
 
 state = { 
@@ -254,6 +254,7 @@ state = {
             "duration": duration,
             "target": countdown_target,
             "last_update": now,
+            "pips": False,
         }
 
 logger.info("Configuring GPIO")
@@ -306,6 +307,12 @@ while True:
             buzzer.on()
         else:
             disable_display(controls)
+            buzzer.off()
+
+    if state["pips"]:
+        if us < 200e3:
+            buzzer.on()
+        else:
             buzzer.off()
 
     state["last_update"] = now
