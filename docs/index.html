@@ -49,7 +49,7 @@
       function start() {
         "use strict";
 
-        var target = new Date(2025, 9, 19, 11, 0, 0);
+        var target = new Date(2025, 8, 19, 11, 0, 0);
         document.getElementById("targetdate").innerText = target.toDateString();
         document.getElementById("targettime").innerText = target.toTimeString();
 
@@ -144,6 +144,7 @@
   <body class="main" onload="start();">
 
   <div class="target">
+    <p class="target"> Countdown to </p>
     <p class="target" id="targetdate">target date</p>
     <p class="target" id="targettime">target time</p>
   </div>
